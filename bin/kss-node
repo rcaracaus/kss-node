@@ -398,11 +398,8 @@ handlebars.registerHelper('eachSection', function(query, options) {
 handlebars.registerHelper('loadSectionTemplate', function (context) {
 	var template;
 
-	if (!config.templateDirectory)
-		return;
-
 	try {
-		template = fs.readFileSync(path.relative(process.cwd(), config.templateDirectory) + '/' + context.reference + '.hbs', 'utf8');
+		template = fs.readFileSync(config.templateDirectory + '/' + context.reference + '.hbs', 'utf8');
 	} catch (e) {
 		return;
 	}
