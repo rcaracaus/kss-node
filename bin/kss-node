@@ -13,14 +13,17 @@ var kss = require(__dirname + '/../lib/kss.js'),
 	less = require('less'),
 	path = require('path'),
 	fs = require('fs'),
-	template, styleguide,
-	generatePage, generateStylesheet,
+	template,
+	styleguide,
+	generatePage,
+	generateStylesheet,
 	config = {
 		templateDirectory: __dirname + '/../lib/template',
 		sourceDirectory: __dirname + '/../demo',
 		destinationDirectory: process.cwd() + '/styleguide'
 	},
 	KSS_FAILED = false,
+	cache = {},
 	argv,
 	error;
 
@@ -397,19 +400,33 @@ handlebars.registerHelper('eachSection', function(query, options) {
 handlebars.registerHelper('sectionTemplate', function(options) {
 	var template;
 
-	try {
-		template = fs.readFileSync(config.templateDirectory + '/' + this.reference + '.html', 'utf8');
-	} catch (e) {
-		try {
-			template = fs.readFileSync(config.templateDirectory + '/' + this.reference + '.hbs', 'utf8');
-		} catch (e) {
-			return;
-		}
+	// Initialize the cache for sectionTemplate.
+	if (!cache['sectionTemplate']) {
+		cache['sectionTemplate'] = {};
 	}
 
-	console.log("...injecting template for section " + this.reference);
+	// Check if this section's template is cached.
+	if (cache['sectionTemplate'][this.reference]) {
+		template = cache['sectionTemplate'][this.reference];
+	}
+	else {
+		// Otherwise, load the template from disk.
+		try {
+			template = fs.readFileSync(config.templateDirectory + '/' + this.reference + '.html', 'utf8');
+		} catch (e) {
+			try {
+				template = fs.readFileSync(config.templateDirectory + '/' + this.reference + '.hbs', 'utf8');
+			} catch (e) {
+				// If there's no template file, use an empty template to prevent
+				// repeatedly checking the disk.
+				template = '';
+			}
+		}
+		// Compile the template and save it to cache.
+		cache['sectionTemplate'][this.reference] = template = handlebars.compile(template);
+	}
+	return template(this);
 
-	return handlebars.compile(template)(this);
 });
 
 /**
