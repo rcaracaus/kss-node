@@ -21,7 +21,8 @@ var kss = require(__dirname + '/../lib/kss.js'),
 	config = {
 		templateDirectory: __dirname + '/../lib/template',
 		sourceDirectory: __dirname + '/../demo',
-		destinationDirectory: process.cwd() + '/styleguide'
+		destinationDirectory: process.cwd() + '/styleguide',
+		markupDirectory:  __dirname + '/../demo'
 	},
 	KSS_FAILED = false,
 	cache = {},
@@ -43,6 +44,9 @@ argv = require('optimist')
 	.string('t')
 	.alias('t', 'template')
 	.describe('t', 'Use a custom template to build your styleguide')
+
+	.string('markup')
+	.describe('markup', 'The directory containing templates of each section of your styleguide')
 
 	.string('s')
 	.alias('s', 'style')
@@ -115,6 +119,7 @@ if (argv['_'].length > 1) {
 if (argv.template) {
 	config.templateDirectory = path.resolve(argv.template);
 }
+config.markupDirectory = (argv.markup) ? path.resolve(argv.markup) : config.sourceDirectory;
 
 console.log('');
 console.log('Generating your KSS Styleguide!');
@@ -122,6 +127,7 @@ console.log('');
 console.log(' * Source: ' + path.resolve(config.sourceDirectory));
 console.log(' * Destination: ' + path.resolve(config.destinationDirectory));
 console.log(' * Template: ' + path.resolve(config.templateDirectory));
+console.log(' * Markup: ' + path.resolve(config.markupDirectory));
 console.log('');
 
 // Compile the Handlebars template
@@ -412,8 +418,8 @@ handlebars.registerHelper('sectionTemplate', function(options) {
 	// Build the cache for the list of handlebarsFiles.
 	if (!cache['handlebarsFiles']) {
 		cache['handlebarsFiles'] = {};
-		files = glob.sync(config.sourceDirectory + '/**/*\.hbs');
-		files = files.concat(glob.sync(config.sourceDirectory + '/**/*\.html'));
+		files = glob.sync(config.markupDirectory + '/**/*\.hbs');
+		files = files.concat(glob.sync(config.markupDirectory + '/**/*\.html'));
 		l = files.length;
 		for (i = 0; i < l; i++) {
 			cache['handlebarsFiles'][path.basename(files[i], path.extname(files[i]))] = files[i];
